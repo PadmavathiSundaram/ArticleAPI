@@ -1,6 +1,5 @@
 # build stage
 FROM golang:alpine as builder
-
 RUN apk update && apk add --no-cache git
 ENV GO111MODULE=on
 
