@@ -1,5 +1,5 @@
 # ArticleAPI
-Prerequist:
+Prerequisite:
 Docker setup
 https://docs.docker.com/docker-for-mac/install/
 

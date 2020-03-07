@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/PadmavathiSundaram/ArticleAPI/pkg/rest"
 	"github.com/go-chi/chi"
 	mw "github.com/go-chi/chi/middleware"
 	log "github.com/sirupsen/logrus"
@@ -16,8 +17,11 @@ var (
 
 func main() {
 	kingpin.Parse()
+
 	router := chi.NewRouter()
 	router.Use(mw.Logger)
+	articleService := rest.NewArticleService()
+	rest.SetupRoutes(router, articleService)
 	server := &http.Server{
 		Handler: router,
 		Addr:    fmt.Sprintf(":%d", *port),
