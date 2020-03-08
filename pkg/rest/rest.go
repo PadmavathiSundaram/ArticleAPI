@@ -14,10 +14,14 @@ import (
 
 // SetupRoutes sets up pet service routes for the given router
 func SetupRoutes(r chi.Router, s Service) {
-	r.Route("/api/articles", func(r chi.Router) {
-		r.Post("/", s.PostArticle)
-		r.Get("/{id}", s.GetArticle)
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/tags/{tagName}/{date}", s.SearchArticle)
+		r.Route("/articles", func(r chi.Router) {
+			r.Post("/", s.PostArticle)
+			r.Get("/{id}", s.GetArticle)
+		})
 	})
+
 }
 
 // maps from internal errors to response status codes
@@ -51,6 +55,7 @@ func NewArticleService(dbClient client.DBClient) Service {
 // Service defines a rest api for interaction
 type Service interface {
 	GetArticle(w http.ResponseWriter, r *http.Request)
+	SearchArticle(w http.ResponseWriter, r *http.Request)
 	PostArticle(w http.ResponseWriter, r *http.Request)
 }
 
@@ -78,6 +83,29 @@ func (ps *service) GetArticle(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, article)
 }
 
+func (ps *service) SearchArticle(w http.ResponseWriter, r *http.Request) {
+	date, tagName := readArticleParams(r)
+	if date == "" || tagName == "" {
+		renderErrorResponse(w, Errorf(ErrInvalidInput, "date and tagName are mandatory"))
+		return
+	}
+	article, err := ps.dbClient.Search(date, tagName)
+	if err != nil {
+		if "mongo: no documents in result" == err.Error() {
+			renderErrorResponse(w, ErrorEf(ErrNotFound, err, "Article Not Found"))
+			return
+		}
+		renderErrorResponse(w, err)
+		return
+	}
+	if len(article) == 0 {
+		renderErrorResponse(w, ErrorEf(ErrNotFound, err, "No Matching Articles Found"))
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, article)
+}
+
 // PostArticle handles a POST request to add a new Article
 func (ps *service) PostArticle(w http.ResponseWriter, r *http.Request) {
 	article, err := readArticleBody(r)
@@ -95,6 +123,11 @@ func (ps *service) PostArticle(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, nil)
 }
 
+func readArticleParams(r *http.Request) (string, string) {
+	date := chi.URLParam(r, "date")
+	tagName := chi.URLParam(r, "tagName")
+	return date, tagName
+}
 func readArticleID(r *http.Request) (string, error) {
 	articleID := chi.URLParam(r, "id")
 	if articleID == "" {
