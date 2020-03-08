@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/PadmavathiSundaram/ArticleAPI/pkg/client"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/rest"
 	"github.com/go-chi/chi"
 	mw "github.com/go-chi/chi/middleware"
@@ -20,6 +21,7 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(mw.Logger)
+	client.NewDBClient("mongodb://mongo")
 	articleService := rest.NewArticleService()
 	rest.SetupRoutes(router, articleService)
 	server := &http.Server{

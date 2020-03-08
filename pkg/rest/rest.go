@@ -20,7 +20,7 @@ func NewArticleService() Service {
 	return &service{}
 }
 
-// Service defines a rest api for interaction with a PetStorer
+// Service defines a rest api for interaction
 type Service interface {
 	GetArticle(w http.ResponseWriter, r *http.Request)
 	PostArticle(w http.ResponseWriter, r *http.Request)
