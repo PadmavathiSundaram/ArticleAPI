@@ -15,8 +15,9 @@ import (
 // DBClient client to perform database operations
 type DBClient interface {
 	CloseConnection()
-	Insert()
-	Select()
+	Insert(article *articles.Article) error
+	Select(articleID string) (*articles.Article, error)
+	Search(date string, tag string) ([]*articles.Article, error)
 }
 
 // NewDBClient a client connected to DB to perform curd operations
@@ -29,34 +30,79 @@ type mongoClient struct {
 	session *mongo.Client
 }
 
-func (mongo *mongoClient) Insert() {
-	log.Infoln("Entered")
-	Tags := []string{"health", "fit"}
-	ash := articles.Article{ArticleID: "1", Title: "Ash", Date: "10-2-09", Body: "Pallet Town", Tags:Tags	}
-	
+func (mongo *mongoClient) Insert(article *articles.Article) error {
+	log.Infoln("Entered Insert")
+
 	collection := mongo.session.Database("articlestore").Collection("articles")
-	insertResult, err := collection.InsertOne(context.TODO(), ash)
+	insertResult, err := collection.InsertOne(context.TODO(), article)
+
 	if err != nil {
-		log.Fatal(err)
+		// log.Fatal(err)
+		return err
 	}
+
 	log.Infoln("Inserted a single document: ", insertResult.InsertedID)
 	fmt.Println("Inserted a single document: ", insertResult.InsertedID)
+	return nil
 }
 
-func (mongo *mongoClient) Select() {
+func (mongo *mongoClient) Select(articleID string) (result *articles.Article, e error) {
 	log.Infoln("Entered select")
-	filter := bson.M{"ArticleID": "1"}
+	filter := bson.D{{"ArticleID", articleID}}
+
 	collection := mongo.session.Database("articlestore").Collection("articles")
-	var result articles.Article
 
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
-		log.Infoln(filter)
-		log.Infoln(result)
-		log.Fatal(err)
+		// log.Fatal(err)
+		return nil, err
 	}
+	mongo.Search("10-2-09", "health")
 	log.Infoln("Found a single document: %+v\n", result)
 	fmt.Printf("Found a single document: %+v\n", result)
+	return result, nil
+}
+
+func (mongo *mongoClient) Search(date string, tag string) (results []*articles.Article, e error) {
+	log.Infoln("Entered search")
+
+	findOptions := options.Find()
+	filter := bson.D{{"Date", date}, {"Tags", tag}}
+
+	collection := mongo.session.Database("articlestore").Collection("articles")
+
+	cur, err := collection.Find(context.TODO(), filter, findOptions)
+	if err != nil {
+		// log.Fatal(err)
+		return nil, err
+	}
+	// Finding multiple documents returns a cursor
+	// Iterating through the cursor allows us to decode documents one at a time
+	for cur.Next(context.TODO()) {
+
+		// create a value into which the single document can be decoded
+		var elem articles.Article
+		err := cur.Decode(&elem)
+		if err != nil {
+			// log.Fatal(err)
+			return nil, err
+		}
+		fmt.Printf("Found multiple documents (array of pointers): %+v\n", &elem)
+
+		results = append(results, &elem)
+	}
+
+	if err := cur.Err(); err != nil {
+		// log.Fatal(err)
+		return nil, err
+	}
+
+	// Close the cursor once finished
+	cur.Close(context.TODO())
+
+	fmt.Printf("Found multiple documents (array of pointers): %+v\n", results)
+
+	return results, nil
 }
 
 func (mongo *mongoClient) CloseConnection() {

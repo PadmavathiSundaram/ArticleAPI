@@ -22,7 +22,7 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(mw.Logger)
 	// tOdO move it to config
-	mongoSession := client.NewDBClient("mongodb://mongo")
+	mongoSession := client.NewDBClient("mongodb://localhost:27017")
 	defer mongoSession.CloseConnection()
 	articleService := rest.NewArticleService(mongoSession)
 	rest.SetupRoutes(router, articleService)
