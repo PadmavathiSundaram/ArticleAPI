@@ -1,4 +1,4 @@
-version: "2"
+version: "2.1"
 services:
   app:
     container_name: app
@@ -8,13 +8,21 @@ services:
     build: .
     ports:
       - "8080:4852" 
+    depends_on:
+      mongo:
+        condition: service_healthy  
     links:
       - mongo
   mongo:
     container_name: mongo
     image: mongo
-    command: --serviceExecutor adaptive
+    command: --serviceExecutor adaptive --logpath=/dev/null
     volumes:
-      - ./data:/data/db
+       - ./data:/data/db
     ports:
       - "27017:27017"
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017 --quiet
+      interval: 20s
+      timeout: 10s
+      retries: 5  
