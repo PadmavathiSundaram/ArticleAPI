@@ -13,9 +13,9 @@ import (
 
 // Store is the interface that performs DB operations
 type Store interface {
-	Insert(article *articles.Article) error
-	Select(articleID string) (*articles.Article, error)
-	Search(date string, tag string) ([]*articles.Article, error)
+	CreatArticle(article *articles.Article) error
+	ReadArticleByID(articleID string) (*articles.Article, error)
+	SearchTagsByDate(date string, tag string) ([]*articles.Article, error)
 }
 
 // NewArticleStore a client connected to DB to perform curd operations
@@ -33,7 +33,7 @@ type articleStore struct {
 	collection *mongo.Collection
 }
 
-func (store *articleStore) Insert(article *articles.Article) error {
+func (store *articleStore) CreatArticle(article *articles.Article) error {
 	log.Infoln("Entered Insert")
 
 	insertResult, err := store.collection.InsertOne(context.TODO(), article)
@@ -46,9 +46,8 @@ func (store *articleStore) Insert(article *articles.Article) error {
 	return nil
 }
 
-func (store *articleStore) Select(articleID string) (result *articles.Article, e error) {
-	log.Infoln("Entered select")
-	filter := bson.D{{"ArticleID", articleID}}
+func (store *articleStore) ReadArticleByID(articleID string) (result *articles.Article, e error) {
+	filter := bson.D{{Key: "ArticleID", Value: articleID}}
 
 	err := store.collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
@@ -60,11 +59,11 @@ func (store *articleStore) Select(articleID string) (result *articles.Article, e
 	return result, nil
 }
 
-func (store *articleStore) Search(date string, tag string) (results []*articles.Article, e error) {
+func (store *articleStore) SearchTagsByDate(date string, tag string) (results []*articles.Article, e error) {
 	log.Infoln("Entered search")
 
 	findOptions := options.Find()
-	filter := bson.D{{"Date", date}, {"Tags", tag}}
+	filter := bson.D{{Key: "Date", Value: date}, {Key: "Tags", Value: tag}}
 
 	cur, err := store.collection.Find(context.TODO(), filter, findOptions)
 	if err != nil {

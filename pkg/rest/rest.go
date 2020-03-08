@@ -11,10 +11,10 @@ import (
 	"github.com/go-chi/render"
 )
 
-// SetupRoutes sets up pet service routes for the given router
+// SetupRoutes sets up Article service routes for the given router
 func SetupRoutes(r chi.Router, s Service) {
 	r.Route("/api", func(r chi.Router) {
-		r.Get("/tags/{tagName}/{date}", s.SearchArticle)
+		r.Get("/tags/{tagName}/{date}", s.SearchTags)
 		r.Route("/articles", func(r chi.Router) {
 			r.Post("/", s.PostArticle)
 			r.Get("/{id}", s.GetArticle)
@@ -54,7 +54,7 @@ func NewArticleService(articleStore client.Store) Service {
 // Service defines a rest api for interaction
 type Service interface {
 	GetArticle(w http.ResponseWriter, r *http.Request)
-	SearchArticle(w http.ResponseWriter, r *http.Request)
+	SearchTags(w http.ResponseWriter, r *http.Request)
 	PostArticle(w http.ResponseWriter, r *http.Request)
 }
 
@@ -63,13 +63,13 @@ type service struct {
 }
 
 // GetArticle handles a GET request to retrieve a Article
-func (ps *service) GetArticle(w http.ResponseWriter, r *http.Request) {
+func (s *service) GetArticle(w http.ResponseWriter, r *http.Request) {
 	articleID, err := readArticleID(r)
 	if err != nil {
 		renderErrorResponse(w, err)
 		return
 	}
-	article, err := ps.articleStore.Select(articleID)
+	article, err := s.articleStore.ReadArticleByID(articleID)
 	if err != nil {
 		if "mongo: no documents in result" == err.Error() {
 			renderErrorResponse(w, ErrorEf(ErrNotFound, err, "Article Not Found"))
@@ -82,13 +82,13 @@ func (ps *service) GetArticle(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, article)
 }
 
-func (ps *service) SearchArticle(w http.ResponseWriter, r *http.Request) {
+func (s *service) SearchTags(w http.ResponseWriter, r *http.Request) {
 	date, tagName := readArticleParams(r)
 	if date == "" || tagName == "" {
 		renderErrorResponse(w, Errorf(ErrInvalidInput, "date and tagName are mandatory"))
 		return
 	}
-	article, err := ps.articleStore.Search(date, tagName)
+	article, err := s.articleStore.SearchTagsByDate(date, tagName)
 	if err != nil {
 		if "mongo: no documents in result" == err.Error() {
 			renderErrorResponse(w, ErrorEf(ErrNotFound, err, "Article Not Found"))
@@ -106,14 +106,14 @@ func (ps *service) SearchArticle(w http.ResponseWriter, r *http.Request) {
 }
 
 // PostArticle handles a POST request to add a new Article
-func (ps *service) PostArticle(w http.ResponseWriter, r *http.Request) {
+func (s *service) PostArticle(w http.ResponseWriter, r *http.Request) {
 	article, err := readArticleBody(r)
 	if err != nil {
 		renderErrorResponse(w, err)
 		return
 	}
 
-	err = ps.articleStore.Insert(article)
+	err = s.articleStore.CreatArticle(article)
 	if err != nil {
 		renderErrorResponse(w, err)
 		return
