@@ -14,7 +14,7 @@ import (
 // DBClient client to perform database operations
 type DBClient interface {
 	CloseConnectionPool()
-	OpenConnectionPool(DBProperties articles.DBProperties) (*mongo.Client, error)
+	OpenConnectionPool(DBProperties *articles.DBProperties) (*mongo.Client, error)
 }
 
 // NewDBClient a client connected to DB to perform curd operations
@@ -35,13 +35,13 @@ func (mc *mongoClient) CloseConnectionPool() {
 }
 
 // OpenConnectionPool for mongo db
-func (mc *mongoClient) OpenConnectionPool(DBProperties articles.DBProperties) (*mongo.Client, error) {
-	// to do to move it to config
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (mc *mongoClient) OpenConnectionPool(DBProperties *articles.DBProperties) (*mongo.Client, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(DBProperties.MaxTimeOut)*time.Second)
 	defer cancel()
 	clientOptions := options.Client().ApplyURI(DBProperties.URL)
-	// to do move to config
-	clientOptions.SetMaxPoolSize(DBProperties.MaxThreadPoolSize)
+
+	clientOptions.SetMaxPoolSize(uint64(DBProperties.MaxThreadPoolSize))
 	client, err := mongo.Connect(ctx, clientOptions)
 
 	if err != nil {

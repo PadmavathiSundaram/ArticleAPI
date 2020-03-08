@@ -19,7 +19,7 @@ type Store interface {
 }
 
 // NewArticleStore a client connected to DB to perform curd operations
-func NewArticleStore(DBProperties articles.DBProperties) (Store, error) {
+func NewArticleStore(DBProperties *articles.DBProperties) (Store, error) {
 	mongo := NewDBClient()
 	client, err := mongo.OpenConnectionPool(DBProperties)
 	if err != nil {
@@ -37,9 +37,7 @@ func (store *articleStore) Insert(article *articles.Article) error {
 	log.Infoln("Entered Insert")
 
 	insertResult, err := store.collection.InsertOne(context.TODO(), article)
-
 	if err != nil {
-
 		return err
 	}
 
@@ -95,8 +93,6 @@ func (store *articleStore) Search(date string, tag string) (results []*articles.
 
 	// Close the cursor once finished
 	cur.Close(context.TODO())
-
 	fmt.Printf("Found multiple documents (array of pointers): %+v\n", results)
-
 	return results, nil
 }

@@ -26,6 +26,7 @@ FROM scratch
 WORKDIR /app
 # Copy app binary from the Builder stage image
 COPY --from=builder /app/cmd/server/articleapi .
+COPY --from=builder /app/cmd/server/config .
 EXPOSE 4852
 ENTRYPOINT ["./articleapi"]
 

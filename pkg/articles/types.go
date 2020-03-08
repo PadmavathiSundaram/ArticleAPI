@@ -1,6 +1,10 @@
 package articles
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
 
 // Article to be persisted in db
 type Article struct {
@@ -16,6 +20,18 @@ type DBProperties struct {
 	URL               string
 	DatabaseName      string
 	CollectionName    string
-	MaxThreadPoolSize uint64
-	MaxTimeOut        time.Duration
+	MaxThreadPoolSize int
+	MaxTimeOut        int
+}
+
+// LoadDBProperties from path specified
+func LoadDBProperties(file *os.File) (*DBProperties, error) {
+	decoder := json.NewDecoder(file)
+	DBProperties := DBProperties{}
+	err := decoder.Decode(&DBProperties)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	return &DBProperties, err
 }

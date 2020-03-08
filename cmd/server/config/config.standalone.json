@@ -1,0 +1,7 @@
+{
+    "URL":"mongodb://mongo",        
+	"DatabaseName": "articlestore",     
+	"CollectionName":   "articles" ,  
+	"MaxThreadPoolSize": 10,  
+	"MaxTimeOut":      20    
+}

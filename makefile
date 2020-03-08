@@ -1,4 +1,5 @@
-local: setup run
+local: setup buildMongo start
+standalone: setup run
 coverage: test
 
 setup:
@@ -11,3 +12,11 @@ test:
 	go tool cover -html=coverage.out
 run:
 	docker-compose up --build
+
+buildMongo:
+	docker-compose up -d mongo 
+	sleep 30
+	docker-compose start mongo
+start:
+	go run cmd/server/main.go -c cmd/server/config/config.local.json
+		
