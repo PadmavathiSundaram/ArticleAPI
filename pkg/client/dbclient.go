@@ -31,7 +31,9 @@ type mongoClient struct {
 
 func (mongo *mongoClient) Insert() {
 	log.Infoln("Entered")
-	ash := articles.Article{ID: "1", Title: "Ash", Date: "10-2-09", Body: "Pallet Town"}
+	Tags := []string{"health", "fit"}
+	ash := articles.Article{ArticleID: "1", Title: "Ash", Date: "10-2-09", Body: "Pallet Town", Tags:Tags	}
+	
 	collection := mongo.session.Database("articlestore").Collection("articles")
 	insertResult, err := collection.InsertOne(context.TODO(), ash)
 	if err != nil {
@@ -43,12 +45,14 @@ func (mongo *mongoClient) Insert() {
 
 func (mongo *mongoClient) Select() {
 	log.Infoln("Entered select")
-	filter := bson.D{{"ID", "1"}}
+	filter := bson.M{"ArticleID": "1"}
 	collection := mongo.session.Database("articlestore").Collection("articles")
 	var result articles.Article
 
 	err := collection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
+		log.Infoln(filter)
+		log.Infoln(result)
 		log.Fatal(err)
 	}
 	log.Infoln("Found a single document: %+v\n", result)

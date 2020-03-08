@@ -2,7 +2,7 @@ package articles
 
 // Article to be persisted in db
 type Article struct {
-	ID    string
+	ArticleID    string
 	Title string
 	Date  string
 	Body  string
