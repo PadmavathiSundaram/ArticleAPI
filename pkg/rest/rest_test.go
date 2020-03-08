@@ -12,7 +12,7 @@ import (
 
 func TestSetupRoutes(t *testing.T) {
 	router := chi.NewRouter()
-	articleService := NewArticleService()
+	articleService := NewArticleService(nil)
 	SetupRoutes(router, articleService)
 	server := httptest.NewServer(router)
 	defer server.Close()
