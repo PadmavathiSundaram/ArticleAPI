@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/PadmavathiSundaram/ArticleAPI/pkg/articles"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/client"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/rest"
 	"github.com/go-chi/chi"
@@ -22,9 +24,12 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(mw.Logger)
 	// tOdO move it to config
-	mongoSession := client.NewDBClient("mongodb://localhost:27017")
-	defer mongoSession.CloseConnection()
-	articleService := rest.NewArticleService(mongoSession)
+	DBProperties := articles.DBProperties{URL: "mongodb://localhost:27017", DatabaseName: "articlestore", CollectionName: "articles", MaxThreadPoolSize: uint64(10), MaxTimeOut: 20 * time.Second}
+	articlestore, err := client.NewArticleStore(DBProperties)
+	if err != nil {
+		log.Fatalf("Could not connect data storage. %v", err)
+	}
+	articleService := rest.NewArticleService(articlestore)
 	rest.SetupRoutes(router, articleService)
 	server := &http.Server{
 		Handler: router,

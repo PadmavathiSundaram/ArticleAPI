@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/articles"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/client"
@@ -48,8 +47,8 @@ func renderErrorResponse(w http.ResponseWriter, err error) {
 }
 
 // NewArticleService creates a new article service
-func NewArticleService(dbClient client.DBClient) Service {
-	return &service{dbClient: dbClient}
+func NewArticleService(articleStore client.Store) Service {
+	return &service{articleStore: articleStore}
 }
 
 // Service defines a rest api for interaction
@@ -60,7 +59,7 @@ type Service interface {
 }
 
 type service struct {
-	dbClient client.DBClient
+	articleStore client.Store
 }
 
 // GetArticle handles a GET request to retrieve a Article
@@ -70,7 +69,7 @@ func (ps *service) GetArticle(w http.ResponseWriter, r *http.Request) {
 		renderErrorResponse(w, err)
 		return
 	}
-	article, err := ps.dbClient.Select(articleID)
+	article, err := ps.articleStore.Select(articleID)
 	if err != nil {
 		if "mongo: no documents in result" == err.Error() {
 			renderErrorResponse(w, ErrorEf(ErrNotFound, err, "Article Not Found"))
@@ -89,7 +88,7 @@ func (ps *service) SearchArticle(w http.ResponseWriter, r *http.Request) {
 		renderErrorResponse(w, Errorf(ErrInvalidInput, "date and tagName are mandatory"))
 		return
 	}
-	article, err := ps.dbClient.Search(date, tagName)
+	article, err := ps.articleStore.Search(date, tagName)
 	if err != nil {
 		if "mongo: no documents in result" == err.Error() {
 			renderErrorResponse(w, ErrorEf(ErrNotFound, err, "Article Not Found"))
@@ -114,7 +113,7 @@ func (ps *service) PostArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ps.dbClient.Insert(article)
+	err = ps.articleStore.Insert(article)
 	if err != nil {
 		renderErrorResponse(w, err)
 		return
@@ -133,10 +132,6 @@ func readArticleID(r *http.Request) (string, error) {
 	if articleID == "" {
 		// Reaching this indicates a bug. At this point, request context should contain an id
 		return "", Errorf(ErrUnknown, "article ID was lost somewhere")
-	}
-	_, err := strconv.ParseInt(articleID, 10, 32)
-	if err != nil {
-		return "", Errorf(ErrInvalidInput, "Invalid article ID %v. ID should be a number", articleID)
 	}
 	return articleID, nil
 }
