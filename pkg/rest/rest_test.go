@@ -7,13 +7,27 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
 	"github.com/stretchr/testify/assert"
 )
 
+type mockArticleService struct{}
+
+func (s *mockArticleService) GetArticle(w http.ResponseWriter, r *http.Request) {
+	render.Status(r, http.StatusOK)
+}
+func (s *mockArticleService) SearchTags(w http.ResponseWriter, r *http.Request) {
+	render.Status(r, http.StatusOK)
+}
+func (s *mockArticleService) PostArticle(w http.ResponseWriter, r *http.Request) {
+	render.Status(r, http.StatusCreated)
+	render.JSON(w, r, nil)
+}
+
 func TestSetupRoutes(t *testing.T) {
 	router := chi.NewRouter()
-	articleService := NewArticleService(nil)
-	SetupRoutes(router, articleService)
+	mockArticleService := &mockArticleService{}
+	SetupRoutes(router, mockArticleService)
 	server := httptest.NewServer(router)
 	defer server.Close()
 
@@ -26,6 +40,7 @@ func TestSetupRoutes(t *testing.T) {
 		StatusCode  int
 	}{
 		{"Route Get articles", "Get", "/api/articles/1", 200},
+		{"Route Search tags", "Get", "/api/tags/tagName/2019-10-02", 200},
 		{"Route Post articles", "Post", "/api/articles/", 201},
 	}
 	for _, td := range testScenarios {

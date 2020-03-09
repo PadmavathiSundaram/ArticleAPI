@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/articles"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/client"
@@ -12,12 +11,16 @@ import (
 	"github.com/go-chi/render"
 )
 
-// SetupRoutes sets up pet service routes for the given router
+// SetupRoutes sets up Article service routes for the given router
 func SetupRoutes(r chi.Router, s Service) {
-	r.Route("/api/articles", func(r chi.Router) {
-		r.Post("/", s.PostArticle)
-		r.Get("/{id}", s.GetArticle)
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/tags/{tagName}/{date}", s.SearchTags)
+		r.Route("/articles", func(r chi.Router) {
+			r.Post("/", s.PostArticle)
+			r.Get("/{id}", s.GetArticle)
+		})
 	})
+
 }
 
 // maps from internal errors to response status codes
@@ -44,28 +47,29 @@ func renderErrorResponse(w http.ResponseWriter, err error) {
 }
 
 // NewArticleService creates a new article service
-func NewArticleService(dbClient client.DBClient) Service {
-	return &service{dbClient: dbClient}
+func NewArticleService(articleStore client.Store) Service {
+	return &service{articleStore: articleStore}
 }
 
 // Service defines a rest api for interaction
 type Service interface {
 	GetArticle(w http.ResponseWriter, r *http.Request)
+	SearchTags(w http.ResponseWriter, r *http.Request)
 	PostArticle(w http.ResponseWriter, r *http.Request)
 }
 
 type service struct {
-	dbClient client.DBClient
+	articleStore client.Store
 }
 
 // GetArticle handles a GET request to retrieve a Article
-func (ps *service) GetArticle(w http.ResponseWriter, r *http.Request) {
+func (s *service) GetArticle(w http.ResponseWriter, r *http.Request) {
 	articleID, err := readArticleID(r)
 	if err != nil {
 		renderErrorResponse(w, err)
 		return
 	}
-	article, err := ps.dbClient.Select(articleID)
+	article, err := s.articleStore.ReadArticleByID(articleID)
 	if err != nil {
 		if "mongo: no documents in result" == err.Error() {
 			renderErrorResponse(w, ErrorEf(ErrNotFound, err, "Article Not Found"))
@@ -78,15 +82,38 @@ func (ps *service) GetArticle(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, article)
 }
 
+func (s *service) SearchTags(w http.ResponseWriter, r *http.Request) {
+	date, tagName := readArticleParams(r)
+	if date == "" || tagName == "" {
+		renderErrorResponse(w, Errorf(ErrInvalidInput, "date and tagName are mandatory"))
+		return
+	}
+	article, err := s.articleStore.SearchTagsByDate(date, tagName)
+	if err != nil {
+		if "mongo: no documents in result" == err.Error() {
+			renderErrorResponse(w, ErrorEf(ErrNotFound, err, "Article Not Found"))
+			return
+		}
+		renderErrorResponse(w, err)
+		return
+	}
+	if len(article) == 0 {
+		renderErrorResponse(w, ErrorEf(ErrNotFound, err, "No Matching Articles Found"))
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, article)
+}
+
 // PostArticle handles a POST request to add a new Article
-func (ps *service) PostArticle(w http.ResponseWriter, r *http.Request) {
+func (s *service) PostArticle(w http.ResponseWriter, r *http.Request) {
 	article, err := readArticleBody(r)
 	if err != nil {
 		renderErrorResponse(w, err)
 		return
 	}
 
-	err = ps.dbClient.Insert(article)
+	err = s.articleStore.CreatArticle(article)
 	if err != nil {
 		renderErrorResponse(w, err)
 		return
@@ -95,15 +122,16 @@ func (ps *service) PostArticle(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, nil)
 }
 
+func readArticleParams(r *http.Request) (string, string) {
+	date := chi.URLParam(r, "date")
+	tagName := chi.URLParam(r, "tagName")
+	return date, tagName
+}
 func readArticleID(r *http.Request) (string, error) {
 	articleID := chi.URLParam(r, "id")
 	if articleID == "" {
 		// Reaching this indicates a bug. At this point, request context should contain an id
 		return "", Errorf(ErrUnknown, "article ID was lost somewhere")
-	}
-	_, err := strconv.ParseInt(articleID, 10, 32)
-	if err != nil {
-		return "", Errorf(ErrInvalidInput, "Invalid article ID %v. ID should be a number", articleID)
 	}
 	return articleID, nil
 }

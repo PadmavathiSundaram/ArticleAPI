@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/PadmavathiSundaram/ArticleAPI/pkg/articles"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/client"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/rest"
 	"github.com/go-chi/chi"
@@ -13,7 +14,8 @@ import (
 )
 
 var (
-	port = kingpin.Flag("port", "port").Short('p').Default("4852").Int()
+	port   = kingpin.Flag("port", "port").Short('p').Default("4852").Int()
+	config = kingpin.Flag("config", "config").Short('c').Default("cmd/server/config/config.standalone.json").File()
 )
 
 func main() {
@@ -21,10 +23,16 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(mw.Logger)
-	// tOdO move it to config
-	mongoSession := client.NewDBClient("mongodb://localhost:27017")
-	defer mongoSession.CloseConnection()
-	articleService := rest.NewArticleService(mongoSession)
+
+	DBProperties, err := articles.LoadDBProperties(*config)
+	if err != nil {
+		log.Fatalf("Could not Load Configurations. %v", err)
+	}
+	articlestore, err := client.NewArticleStore(DBProperties)
+	if err != nil {
+		log.Fatalf("Could not connect data storage. %v", err)
+	}
+	articleService := rest.NewArticleService(articlestore)
 	rest.SetupRoutes(router, articleService)
 	server := &http.Server{
 		Handler: router,
