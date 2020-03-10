@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/PadmavathiSundaram/ArticleAPI/pkg/articles"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/client"
+	model "github.com/PadmavathiSundaram/ArticleAPI/pkg/model"
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/rest"
 	"github.com/go-chi/chi"
 	mw "github.com/go-chi/chi/middleware"
@@ -24,16 +24,17 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(mw.Logger)
 
-	DBProperties, err := articles.LoadDBProperties(*config)
+	config, err := model.LoadConfig(*config)
 	if err != nil {
 		log.Fatalf("Could not Load Configurations. %v", err)
 	}
-	articlestore, err := client.NewArticleStore(DBProperties)
-	if err != nil {
-		log.Fatalf("Could not connect data storage. %v", err)
+	DBClient := client.NewDBClient()
+	if err := DBClient.DBInit(config.DBProperties); err != nil {
+		log.Fatalf("Could not Connect to the Database. %v", err)
 	}
-	articleService := rest.NewArticleService(articlestore)
-	rest.SetupRoutes(router, articleService)
+	articlestore := client.NewArticleStore(DBClient)
+	articleDelegate := rest.NewArticleDelegate(articlestore)
+	rest.SetupRoutes(router, articleDelegate)
 	server := &http.Server{
 		Handler: router,
 		Addr:    fmt.Sprintf(":%d", *port),

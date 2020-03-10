@@ -1,7 +1,13 @@
-{
+{"DBProperties":{
     "URL":"mongodb://mongo",        
 	"DatabaseName": "articlestore",     
 	"CollectionName":   "articles" ,  
 	"MaxThreadPoolSize": 10,  
-	"MaxTimeOut":      20    
+	"MaxTimeOut":      20,
+	"Indexes" :{
+		"Date":false, // index field : isUnique
+		"Tags":false,
+		"ArticleID":true
+	}  
+} 
 }
