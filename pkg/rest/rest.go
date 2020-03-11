@@ -14,8 +14,9 @@ import (
 
 // SetupRoutes sets up Article service routes for the given router
 func SetupRoutes(r chi.Router, d Delegate) {
-	r.Use(recoverHandler)
+	r.Use(recoverHandler, responseTimeLogger)
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/healthcheck", d.HealthCheck)
 		r.Get("/tags/{tagName}/{date}", d.SearchTags)
 		r.Route("/articles", func(r chi.Router) {
 			r.Post("/", d.PostArticle)
@@ -90,10 +91,23 @@ type Delegate interface {
 	GetArticle(w http.ResponseWriter, r *http.Request)
 	SearchTags(w http.ResponseWriter, r *http.Request)
 	PostArticle(w http.ResponseWriter, r *http.Request)
+	HealthCheck(w http.ResponseWriter, r *http.Request)
 }
 
 type delegate struct {
 	articleStore client.ArticleStore
+}
+
+func (d *delegate) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	health := model.Health{Status: "success"}
+	if !d.articleStore.HealthCheck() {
+		render.Status(r, http.StatusInternalServerError)
+		health.Status = "failure"
+		render.JSON(w, r, health)
+		return
+	}
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, health)
 }
 
 // GetArticle handles a GET request to retrieve a Article

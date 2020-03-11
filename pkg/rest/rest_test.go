@@ -13,6 +13,9 @@ import (
 
 type mockArticleService struct{}
 
+func (s *mockArticleService) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	render.Status(r, http.StatusOK)
+}
 func (s *mockArticleService) GetArticle(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusOK)
 }
@@ -39,6 +42,7 @@ func TestSetupRoutes(t *testing.T) {
 		URL         string
 		StatusCode  int
 	}{
+		{"Route HealthCheck", "Get", "/api/Healthcheck", 200},
 		{"Route Get articles", "Get", "/api/articles/1", 200},
 		{"Route Search tags", "Get", "/api/tags/tagName/2019-10-02", 200},
 		{"Route Post articles", "Post", "/api/articles/", 201},

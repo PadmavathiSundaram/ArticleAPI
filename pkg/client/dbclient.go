@@ -38,6 +38,7 @@ func ConvertMapToBsonM(fields map[string]string) bson.M {
 // DBClient client to perform database operations
 type DBClient interface {
 	DBDestroy() error
+	HealthCheck() bool
 	DBInit(DBProperties model.DBProperties) (err error)
 	Read(key string, value string) interface{}
 	Write(document interface{}) (interface{}, error)
@@ -77,6 +78,13 @@ func (mc *mongoClient) DBInit(DBProperties model.DBProperties) (err error) {
 	}
 	log.Infoln("Loaded Collection ", DBProperties.CollectionName)
 	return nil
+}
+
+func (mc *mongoClient) HealthCheck() bool {
+	if err := mc.session.Ping(context.Background(), nil); err != nil {
+		return false
+	}
+	return true
 }
 
 func (mc *mongoClient) setUpIndexes(indexes map[string]bool) error {

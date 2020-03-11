@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+// Health - API health
+type Health struct {
+	Status string `json:"status,omitempty"`
+}
+
 // Tagsview view of Tags stats
 type Tagsview struct {
 	Tag         string    `json:"tag,omitempty" bson:"Tag,omitempty"`

@@ -12,6 +12,7 @@ import (
 
 // ArticleStore is the interface that performs DB operations
 type ArticleStore interface {
+	HealthCheck() bool
 	CreatArticle(article *model.Article) error
 	ReadArticleByID(articleID string) (*model.Article, error)
 	SearchTagsByDate(date string, tag string) ([]*model.Tagsview, error)
@@ -26,6 +27,9 @@ type mongoArticleStore struct {
 	dbClient DBClient
 }
 
+func (store *mongoArticleStore) HealthCheck() bool {
+	return store.dbClient.HealthCheck()
+}
 func (store *mongoArticleStore) CreatArticle(article *model.Article) error {
 	if _, err := store.dbClient.Write(article); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
