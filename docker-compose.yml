@@ -13,6 +13,11 @@ services:
         condition: service_healthy  
     links:
       - mongo
+    healthcheck:
+      test: curl -f localhost:4852/healthcheck --quiet
+      interval: 20s
+      timeout: 10s
+      retries: 5   
   mongo:
     container_name: mongo
     image: mongo
