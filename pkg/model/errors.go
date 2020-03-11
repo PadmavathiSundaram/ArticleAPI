@@ -1,4 +1,4 @@
-package rest
+package model
 
 import (
 	"fmt"
@@ -18,9 +18,9 @@ const (
 
 // Error defines an error that separates internal and external error messages
 type Error struct {
-	Message string
-	Code    int
-	Cause   error
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+	Cause   error  `json:"detail,omitempty"`
 }
 
 func (e *Error) Error() string {

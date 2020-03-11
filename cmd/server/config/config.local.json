@@ -1,7 +1,10 @@
 {
-    "URL":"mongodb://localhost:27017",        
+	"DBProperties":{
+	"URL":"mongodb://localhost:27017",        
 	"DatabaseName": "articlestore",     
 	"CollectionName":   "articles" ,  
 	"MaxThreadPoolSize": 10,  
-	"MaxTimeOut":      20    
+	"MaxTimeOut":      20,
+	"Indexes" :{"Date":false,"Tags":false,"ArticleID":true}  
+	}
 }
