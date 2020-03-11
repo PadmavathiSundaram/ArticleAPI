@@ -99,8 +99,6 @@ func (mc *mongoClient) setUpIndexes(indexes map[string]bool) error {
 		models = append(models, index)
 	}
 
-	// Declare an options object
-	// opts := options.CreateIndexes().SetMaxTime(10 * time.Second)
 	if _, err := mc.collection.Indexes().CreateMany(context.Background(), models); err != nil {
 		log.Errorln("Indexes().CreateMany() ERROR:", err)
 		return err
