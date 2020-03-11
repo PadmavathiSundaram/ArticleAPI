@@ -14,7 +14,7 @@ import (
 
 // SetupRoutes sets up Article service routes for the given router
 func SetupRoutes(r chi.Router, d Delegate) {
-	r.Use(recoverHandler, responseTimeLogger)
+	r.Use(recoverHandler, apiLogger)
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/healthcheck", d.HealthCheck)
 		r.Get("/tags/{tagName}/{date}", d.SearchTags)

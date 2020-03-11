@@ -22,12 +22,13 @@ func recoverHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func responseTimeLogger(next http.Handler) http.Handler {
+func apiLogger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		log.Infoln("Audit log : Request", r.URL)
 		start := time.Now()
 		next.ServeHTTP(w, r)
 		end := time.Now()
-		log.Infoln("Response Time : ", r.URL, " was processed in ", end.Sub(start))
+		log.Infoln("Audit Log : Request ", r.URL, " processed in ", end.Sub(start))
 	}
 
 	return http.HandlerFunc(fn)

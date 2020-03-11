@@ -32,4 +32,6 @@ lint:
 	golangci-lint run ./...
 lint-install-mac:
 	brew install golangci/tap/golangci-lint
+clean-up:
+	docker image prune	
 		
