@@ -14,6 +14,11 @@ https://golang.org/dl/
 
 make standalone
 --
+APP is accessable on port 8080 by default.
+http://localhost:8080/api/healthcheck -Get
+http://localhost:8080/api/articles - post
+http://localhost:8080/api/articles/{id} - Get
+http://localhost:8080/api/tags/{tagName}/{date} - Get- tagName is case sensitive
 
 This creates an instance of mongodb from docker and waits for it to be up and running before starting the app
 
@@ -28,6 +33,8 @@ make local
 
 It runs a local docker instance in 'buildMongo' step. and starts the app using go run
 
+App starts on post 4852 by default
+
 # To see test coverage
 ----------------------
 
@@ -37,7 +44,7 @@ make coverage
 To view the code coverage report
 it also tests for race conditions
 
-#To use an existing Mongo instance
+# To use an existing Mongo instance
 -------------------------------
 
 Modify the cmd\server\config\config.local.json to local mongo DB properties and run:
@@ -92,6 +99,7 @@ Graceful shutdown of server
 
 
 Go Concepts:
+---
 
 1. Idiomatic error handling is used wherever possible.
 2. Defer is used to execute items at the end of the function, like closing a file
@@ -135,7 +143,18 @@ router -> delegate -> store -> client -> db
 3. Go modules and vendor based dependencies are used.
 4. App tested for race conditions
 
+# Assumptions:
+------------
 
+1. Duplicate id insertions, would be treated as an error
+2. date, tags and id fields are mandatory
+3. An article can be created without title and/or body
+4. Date should be of format YYYY-MM-DD
+5. Date can be a future date.
+6. Duplicate entries in tags will be persisted as is but filtered in view
+7. Other additional unknow fields in the request will be ignored
+8. There are no length restrictions on the fields
+9. Tags are free text string – not predefined enums - they are case sensitive in search query
 
 
 
