@@ -15,10 +15,15 @@ https://golang.org/dl/
 make standalone
 --
 APP is accessable on port 8080 by default.
+
 http://localhost:8080/api/healthcheck -Get
+
 http://localhost:8080/api/articles - post
+
 http://localhost:8080/api/articles/{id} - Get
+
 http://localhost:8080/api/tags/{tagName}/{date} - Get- tagName is case sensitive
+
 
 This creates an instance of mongodb from docker and waits for it to be up and running before starting the app
 
