@@ -58,7 +58,7 @@ This will connect the app to the existing local mongo instance.
 # Features Implemented:
 --------------------------
 
-Dockerizied setup
+Dockerized setup
 -----------------
 1. App can be started as a standalone app
 2. multi- stage docker build is used, this ensures that the final docker image size, including all configurations is only 18.3MB

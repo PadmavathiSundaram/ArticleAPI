@@ -10,25 +10,8 @@ import (
 
 	"github.com/PadmavathiSundaram/ArticleAPI/pkg/model"
 	"github.com/go-chi/chi"
-	"github.com/go-chi/render"
 	"github.com/stretchr/testify/assert"
 )
-
-type mockArticleDelegate struct{}
-
-func (d *mockArticleDelegate) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	render.Status(r, http.StatusOK)
-}
-func (d *mockArticleDelegate) GetArticle(w http.ResponseWriter, r *http.Request) {
-	render.Status(r, http.StatusOK)
-}
-func (d *mockArticleDelegate) SearchTags(w http.ResponseWriter, r *http.Request) {
-	render.Status(r, http.StatusOK)
-}
-func (d *mockArticleDelegate) PostArticle(w http.ResponseWriter, r *http.Request) {
-	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, nil)
-}
 
 func TestSetupRoutes(t *testing.T) {
 	router := chi.NewRouter()
