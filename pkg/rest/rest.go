@@ -14,6 +14,7 @@ import (
 
 // SetupRoutes sets up Article service routes for the given router
 func SetupRoutes(r chi.Router, d Delegate) {
+	r.Use(recoverHandler)
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/tags/{tagName}/{date}", d.SearchTags)
 		r.Route("/articles", func(r chi.Router) {
@@ -45,6 +46,38 @@ func renderErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 
 	render.Status(r, responseStatus)
 	render.JSON(w, r, err)
+}
+
+func validateRequestArticle(article model.Article) error {
+	if article.ArticleID == "" || article.Date == "" || len(article.Tags) <= 0 {
+		return model.Errorf(model.ErrInvalidInput, "Invalid Article data - id, date and atleast 1 tag is mandatory")
+
+	}
+	layout := "2006-01-02"
+	if _, err := time.Parse(layout, article.Date); err != nil {
+		return model.ErrorEf(model.ErrInvalidInput, err, "Invalid date Format expected format YYYY-MM-DD 2016-09-22")
+	}
+	return nil
+
+}
+
+func readArticleBody(r *http.Request) (*model.Article, error) {
+	if r.Body == nil {
+		return nil, model.Errorf(model.ErrInvalidInput, "No request body")
+	}
+	articleData, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, model.ErrorEf(model.ErrInvalidInput, err, "Bad request body")
+	}
+	var article model.Article
+	if err = json.Unmarshal(articleData, &article); err != nil {
+		return nil, model.ErrorEf(model.ErrInvalidInput, err, "Invalid Article data")
+	}
+
+	if err = validateRequestArticle(article); err != nil {
+		return nil, err
+	}
+	return &article, nil
 }
 
 // NewArticleDelegate creates a new article service
@@ -134,26 +167,4 @@ func readArticleID(r *http.Request) (string, error) {
 		return "", model.Errorf(model.ErrUnknown, "article ID was lost somewhere")
 	}
 	return articleID, nil
-}
-
-func readArticleBody(r *http.Request) (*model.Article, error) {
-	if r.Body == nil {
-		return nil, model.Errorf(model.ErrInvalidInput, "No request body")
-	}
-	articleData, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, model.ErrorEf(model.ErrInvalidInput, err, "Bad request body")
-	}
-	var article model.Article
-	if err = json.Unmarshal(articleData, &article); err != nil {
-		return nil, model.ErrorEf(model.ErrInvalidInput, err, "Invalid Article data")
-	}
-	if article.ArticleID == "" || article.Date == "" || article.Tags == nil || len(article.Tags) <= 0 {
-		return nil, model.ErrorEf(model.ErrInvalidInput, err, "Invalid Article data - id, date and atleast 1 tag is mandatory")
-	}
-	layout := "2006-01-02"
-	if _, err := time.Parse(layout, article.Date); err != nil {
-		return nil, model.ErrorEf(model.ErrInvalidInput, err, "Invalid date Format expected format YYYY-MM-DD 2016-09-22")
-	}
-	return &article, nil
 }

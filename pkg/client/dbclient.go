@@ -82,7 +82,7 @@ func (mc *mongoClient) DBInit(DBProperties model.DBProperties) (err error) {
 func (mc *mongoClient) setUpIndexes(indexes map[string]bool) error {
 	// Declare an array of bsonx models for the indexes
 	models := []mongo.IndexModel{}
-	collation := options.Collation{Strength: 1, Locale: "en"}
+	collation := options.Collation{Strength: 2, Locale: "en"}
 	for k, v := range indexes {
 		index := mongo.IndexModel{
 			Keys:    bsonx.Doc{{Key: k, Value: bsonx.Int32(-1)}},
@@ -97,7 +97,7 @@ func (mc *mongoClient) setUpIndexes(indexes map[string]bool) error {
 		log.Errorln("Indexes().CreateMany() ERROR:", err)
 		return err
 	}
-	mc.collection.Indexes().List(context.Background())
+
 	log.Infoln("Created Indexes:", models)
 	return nil
 }

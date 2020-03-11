@@ -5,7 +5,7 @@
 	"MaxThreadPoolSize": 10,  
 	"MaxTimeOut":      20,
 	"Indexes" :{
-		"Date":false, // index field : isUnique
+		"Date":false, 
 		"Tags":false,
 		"ArticleID":true
 	}  

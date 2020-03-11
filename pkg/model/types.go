@@ -8,10 +8,10 @@ import (
 
 // Tagsview view of Tags stats
 type Tagsview struct {
-	Tag         string   `json:"tag,omitempty" bson:"Tag,omitempty"`
-	Articles    []string `json:"articles,omitempty" bson:"Articles,omitempty"`
-	RelatedTags []string `json:"related_tags,omitempty" bson:"RelatedTags,omitempty"`
-	Count       int      `json:"count,omitempty" bson:"Count,omitempty"`
+	Tag         string    `json:"tag,omitempty" bson:"Tag,omitempty"`
+	Articles    []*string `json:"articles" bson:"Articles"`
+	RelatedTags []*string `json:"related_tags" bson:"RelatedTags"`
+	Count       int       `json:"count,omitempty" bson:"Count,omitempty"`
 }
 
 // Article to be persisted in db
